@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tales of Valour Web Port</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --accent: #e74c3c;
+            --text: #ecf0f1;
+            --background: #1a1a2e;
+            --border: #7f8c8d;
+            --highlight: #3498db;
+            --gold: #ffd700;
+            --health: #e74c3c;
+            --xp: #2ecc71;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            background-image: radial-gradient(circle, #1a1a2e 0%, #0d0d1a 100%);
+            min-height: 100vh;
+        }
+        
+        .game-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            height: calc(100vh - 40px);
+        }
+        
+        @media (max-width: 768px) {
+            .game-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr auto;
+            }
+        }
+        
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            background-color: rgba(44, 62, 80, 0.8);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            position: relative;
+        }
+        
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .panel {
+            background-color: rgba(52, 73, 94, 0.8);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+        }
+        
+        .output {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            border: 1px solid var(--border);
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        
+        .output p {
+            margin-bottom: 10px;
+        }
+        
+        .input-area {
+            display: flex;
+            gap: 10px;
+        }
+        
+        #command-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            background-color: rgba(0, 0, 0, 0.4);
+            color: var(--text);
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        #command-input:focus {
+            border-color: var(--highlight);
+            outline: none;
+        }
+        
+        #submit-btn {
+            padding: 12px 20px;
+            background: linear-gradient(to bottom, var(--accent), #c0392b);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        #submit-btn:hover {
+            background: linear-gradient(to bottom, #c0392b, #a93226);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 8px rgba(0, 0, 0, 0.4);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 15px;
+        }
+        
+        .stat-item {
+            padding: 12px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            font-size: 15px;
+            border-left: 3px solid var(--highlight);
+        }
+        
+        .stat-label {
+            font-weight: bold;
+            color: var(--highlight);
+            margin-bottom: 3px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .health-value {
+            color: var(--health);
+        }
+        
+        .xp-value {
+            color: var(--xp);
+        }
+        
+        .gold-value {
+            color: var(--gold);
+        }
+        
+        .inventory-list {
+            margin-top: 15px;
+            max-height: 250px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+        }
+        
+        .inventory-item {
+            padding: 12px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            text-align: center;
+            font-size: 14px;
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .inventory-item:hover {
+            transform: translateY(-3px);
+            border-color: var(--highlight);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .title-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: 30px;
+            height: 100%;
+            padding: 20px;
+        }
+        
+        .title {
+            font-size: 4rem;
+            text-shadow: 0 0 15px var(--accent), 0 0 25px rgba(231, 76, 60, 0.7);
+            letter-spacing: 4px;
+            background: linear-gradient(to right, #ff9a9e, #fad0c4, #fad0c4, #a18cd1);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: title-glow 2s infinite alternate;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        @keyframes title-glow {
+            0% { text-shadow: 0 0 10px var(--accent), 0 0 20px rgba(231, 76, 60, 0.7); }
+            100% { text-shadow: 0 0 20px var(--accent), 0 0 40px rgba(231, 76, 60, 0.9); }
+        }
+        
+        .subtitle {
+            font-size: 1.8rem;
+            color: var(--highlight);
+            margin-bottom: 30px;
+            text-shadow: 0 0 5px rgba(52, 152, 219, 0.7);
+        }
+        
+        .btn {
+            padding: 15px 40px;
+            background: linear-gradient(to bottom, var(--highlight), #2980b9);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: bold;
+            transition: all 0.3s;
+            margin: 10px;
+            font-family: 'Courier New', monospace;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+            background: linear-gradient(to bottom, #3498db, #1f6fb5);
+        }
+        
+        .character-select {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 20px;
+        }
+        
+        .character-card {
+            background: linear-gradient(to bottom right, #34495e, #2c3e50);
+            border-radius: 10px;
+            padding: 25px;
+            width: 220px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            border: 2px solid var(--border);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .character-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            border-color: var(--highlight);
+        }
+        
+        .character-card h3 {
+            color: var(--highlight);
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .character-card p {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .character-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        
+        .combat-alert {
+            color: var(--accent);
+            font-weight: bold;
+            animation: pulse 1s infinite;
+            border: 1px solid var(--accent);
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            background-color: rgba(231, 76, 60, 0.1);
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        .command-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        
+        .command-item {
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .command-item:hover {
+            background-color: rgba(52, 152, 219, 0.2);
+            transform: translateX(3px);
+        }
+        
+        .location-info {
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            border-left: 3px solid var(--highlight);
+        }
+        
+        .location-name {
+            font-size: 1.4rem;
+            color: var(--highlight);
+            margin-bottom: 5px;
+        }
+        
+        .enemy-health {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        
+        .health-bar {
+            flex: 1;
+            height: 12px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+            transition: width 0.5s;
+        }
+        
+        .boss-indicator {
+            color: var(--accent);
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 0 5px rgba(231, 76, 60, 0.7);
+            margin-bottom: 5px;
+        }
+        
+        .item-rarity {
+            font-size: 12px;
+            color: var(--gold);
+            margin-top: 5px;
+        }
+        
+        .attack-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .attack-btn {
+            padding: 10px 15px;
+            background: linear-gradient(to bottom, #e67e22, #d35400);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            transition: all 0.2s;
+        }
+        
+        .attack-btn:hover {
+            background: linear-gradient(to bottom, #d35400, #ba4a00);
+            transform: translateY(-2px);
+        }
+        
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .game-title {
+            font-size: 1.5rem;
+            color: var(--highlight);
+        }
+        
+        .difficulty-indicator {
+            background-color: rgba(231, 76, 60, 0.2);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            color: var(--accent);
+        }
+        
+        .class-icon {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="main-content">
+            <div class="game-header">
+                <div class="game-title">TALES OF VALOUR WEBPORT</div>
+                <div id="difficulty-display" class="difficulty-indicator">Normal</div>
+            </div>
+            <div class="output" id="game-output"></div>
+            <div class="input-area">
+                <input type="text" id="command-input" placeholder="Type a command...">
+                <button id="submit-btn">Enter</button>
+            </div>
+        </div>
+        
+        <div class="sidebar">
+            <div class="panel" id="player-stats">
+                <h2>Player Stats</h2>
+                <div class="stats-grid" id="stats-grid"></div>
+            </div>
+            
+            <div class="panel" id="inventory">
+                <h2>Inventory</h2>
+                <div class="inventory-list" id="inventory-list"></div>
+            </div>
+            
+            <div class="panel" id="help">
+                <h2>Commands</h2>
+                <div class="command-list" id="command-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        const gameState = {
+            player: null,
+            currentRoom: null,
+            gameActive: false,
+            inCombat: false,
+            currentEnemy: null,
+            rooms: {},
+            items: {},
+            enemies: {},
+            npcs: {},
+            difficulty: 2,
+            fightStage: 1,
+            commands: {
+                'help': 'Show available commands',
+                'stats': 'Display player stats',
+                'explore': 'Search the area for items and encounters',
+                'inventory': 'View your inventory',
+                'use': 'Use an item from your inventory',
+                'equip': 'Equip a weapon or armor',
+                'go': 'Move to a different location (north, south, east, west)',
+                'rest': 'Rest to regain health',
+                'quit': 'Exit the game'
+            }
+        };
+
+        // Player Classes
+        class Player {
+            constructor(name, className) {
+                this.name = name;
+                this.className = className;
+                this.health = 25;
+                this.maxHealth = 25;
+                this.status = 'regular';
+                this.inventory = [];
+                this.equippedWeapon = null;
+                this.equippedArmor = null;
+                this.gold = 0;
+                this.level = 1;
+                this.exp = 0;
+                this.score = 0;
+                this.unarmedAttack = '';
+                this.firstAttack = '';
+                this.secondAttack = '';
+                this.restCooldown = 0;
+                
+                // Set class-specific attributes
+                switch(className) {
+                    case 'Traveler':
+                        this.unarmedAttack = 'punch';
+                        this.firstAttack = 'slash';
+                        this.secondAttack = 'stab';
+                        this.classIcon = '⚔️';
+                        break;
+                    case 'Wilder':
+                        this.unarmedAttack = 'punch';
+                        this.firstAttack = 'smash';
+                        this.secondAttack = 'strike';
+                        this.classIcon = '🪓';
+                        this.health = 30;
+                        this.maxHealth = 30;
+                        break;
+                    case 'Ranger':
+                        this.unarmedAttack = 'fling';
+                        this.firstAttack = 'shoot';
+                        this.secondAttack = 'strike';
+                        this.classIcon = '🏹';
+                        break;
+                    case 'Shaman':
+                        this.unarmedAttack = 'fling';
+                        this.firstAttack = 'blast';
+                        this.secondAttack = 'stab';
+                        this.classIcon = '🔮';
+                        break;
+                }
+            }
+
+            // Add to player's inventory
+            addToInventory(item) {
+                this.inventory.push(item);
+                this.addToOutput(`You picked up ${item.name}!`);
+                this.score += 10;
+                this.exp += 10;
+                gameState.updateUI();
+            }
+
+            // Use an item
+            useItem(itemName) {
+                const item = this.inventory.find(item => item.name.toLowerCase() === itemName.toLowerCase());
+                if (item) {
+                    // Handle item usage
+                    if (item.type === 'consumable') {
+                        this.health = Math.min(this.maxHealth, this.health + item.healAmount);
+                        this.inventory = this.inventory.filter(i => i !== item);
+                        this.addToOutput(`You used ${item.name} and restored ${item.healAmount} health.`);
+                        this.addToOutput(`Health: ${this.health}/${this.maxHealth}`);
+                        this.score += 10;
+                        this.exp += 10;
+                    }
+                    gameState.updateUI();
+                } else {
+                    this.addToOutput(`You don't have a ${itemName} in your inventory.`);
+                }
+            }
+
+            // Equip an item
+            equipItem(itemName) {
+                const item = this.inventory.find(item => item.name.toLowerCase() === itemName.toLowerCase());
+                if (item) {
+                    if (item.type === 'weapon') {
+                        this.equippedWeapon = item;
+                        this.addToOutput(`You equipped ${item.name}.`);
+                    } else if (item.type === 'armor') {
+                        this.equippedArmor = item;
+                        this.addToOutput(`You equipped ${item.name}.`);
+                    } else {
+                        this.addToOutput(`You can't equip that item.`);
+                    }
+                    this.score += 25;
+                    this.exp += 25;
+                    gameState.updateUI();
+                } else {
+                    this.addToOutput(`You don't have a ${itemName} in your inventory.`);
+                }
+            }
+
+            // Rest to regain health
+            rest() {
+                if (this.restCooldown <= 0) {
+                    const healAmount = Math.floor(Math.random() * 6) + 5;
+                    this.health = Math.min(this.maxHealth, this.health + healAmount);
+                    this.restCooldown = 5;
+                    this.addToOutput(`You rest and regain ${healAmount} health.`);
+                    this.addToOutput(`Health: ${this.health}/${this.maxHealth}`);
+                    this.score += 10;
+                    this.exp += 10;
+                } else {
+                    this.addToOutput(`You're not tired enough to rest.`);
+                }
+                gameState.updateUI();
+            }
+
+            // Attack an enemy
+            attack(enemy, attackType) {
+                if (!enemy) return;
+                
+                let damage = 0;
+                let attackName = '';
+                
+                // Determine damage based on attack type
+                switch(attackType) {
+                    case 'punch':
+                        damage = Math.floor(Math.random() * 4);
+                        if (this.className === 'Wilder') damage += 1;
+                        attackName = 'punch';
+                        break;
+                    case 'fling':
+                        const hitChance = Math.floor(Math.random() * 3);
+                        if (hitChance === 0) {
+                            this.addToOutput(`You missed the ${enemy.name}!`);
+                            this.enemyAttack(enemy);
+                            return;
+                        }
+                        damage = Math.floor(Math.random() * 5);
+                        attackName = 'fling';
+                        break;
+                    case 'slash':
+                        damage = Math.floor(Math.random() * 9) + 1;
+                        attackName = 'slash';
+                        break;
+                    case 'stab':
+                        damage = Math.floor(Math.random() * 3) + 4;
+                        attackName = 'stab';
+                        break;
+                    case 'smash':
+                        damage = Math.floor(Math.random() * 2) + 5;
+                        attackName = 'smash';
+                        break;
+                    case 'strike':
+                        damage = Math.floor(Math.random() * 4) + 2;
+                        attackName = 'strike';
+                        break;
+                    case 'shoot':
+                        const missChance = Math.floor(Math.random() * 10);
+                        if (missChance === 0) {
+                            this.addToOutput(`You missed the ${enemy.name}!`);
+                            this.enemyAttack(enemy);
+                            return;
+                        }
+                        damage = Math.floor(Math.random() * 6) + 3;
+                        attackName = 'shoot';
+                        break;
+                    case 'blast':
+                        const blastMiss = Math.floor(Math.random() * 10);
+                        if (blastMiss === 0) {
+                            this.addToOutput(`You missed the ${enemy.name}!`);
+                            this.enemyAttack(enemy);
+                            return;
+                        }
+                        damage = Math.floor(Math.random() * 6) + 3;
+                        attackName = 'blast';
+                        break;
+                    default:
+                        damage = Math.floor(Math.random() * 4);
+                        attackName = 'attack';
+                }
+                
+                // Apply weapon bonus if equipped
+                if (this.equippedWeapon) {
+                    damage += this.equippedWeapon.damageBonus;
+                }
+                
+                enemy.health -= damage;
+                if (enemy.health < 0) enemy.health = 0;
+                
+                this.addToOutput(`You ${attackName} the ${enemy.name} for ${damage} damage!`);
+                
+                // Check if enemy is defeated
+                if (enemy.health <= 0) {
+                    this.addToOutput(`You defeated the ${enemy.name}!`);
+                    this.gold += enemy.gold;
+                    this.exp += 100;
+                    this.score += 100;
+                    
+                    // Check for level up
+                    if (this.exp >= this.level * 100) {
+                        this.levelUp();
+                    }
+                    
+                    gameState.inCombat = false;
+                    gameState.currentEnemy = null;
+                } else {
+                    // Enemy counterattack
+                    this.enemyAttack(enemy);
+                }
+                
+                gameState.updateUI();
+            }
+
+            // Enemy attacks player
+            enemyAttack(enemy) {
+                if (!enemy) return;
+                
+                let minDamage = Math.floor(enemy.maxDamage / 3);
+                let damage = Math.floor(Math.random() * (enemy.maxDamage - minDamage + 1)) + minDamage;
+                
+                // Apply armor reduction if equipped
+                if (this.equippedArmor) {
+                    damage -= this.equippedArmor.defenseBonus;
+                    if (damage < 0) damage = 0;
+                }
+                
+                this.health -= damage;
+                if (this.health < 0) this.health = 0;
+                
+                this.addToOutput(`The ${enemy.name} attacks you for ${damage} damage!`);
+                this.addToOutput(`Your health: ${this.health > 0 ? this.health : 0}/${this.maxHealth}`);
+                
+                // Check if player is defeated
+                if (this.health <= 0) {
+                    this.addToOutput(`You have been defeated by the ${enemy.name}! Game over.`);
+                    gameState.gameActive = false;
+                }
+                
+                gameState.updateUI();
+            }
+
+            // Level up the player
+            levelUp() {
+                this.level++;
+                this.maxHealth += 10;
+                this.health = this.maxHealth;
+                this.exp = 0;
+                
+                this.addToOutput(`Level up! You reached level ${this.level}!`);
+                this.addToOutput(`Max health increased to ${this.maxHealth}.`);
+                this.addToOutput(`Health fully restored!`);
+            }
+
+            // Output text to game console
+            addToOutput(text, className) {
+                const output = document.getElementById('game-output');
+                const p = document.createElement('p');
+                p.textContent = text;
+                if (className) p.className = className;
+                output.appendChild(p);
+                output.scrollTop = output.scrollHeight;
+            }
+            
+            // Tire effect
+            tire() {
+                const diceroll = Math.floor(Math.random() * 3);
+                if (diceroll === 0) {
+                    this.health = Math.max(0, this.health - 2);
+                    this.addToOutput('You have gotten tired, your health suffered');
+                    this.addToOutput(`Your health is ${this.health}`);
+                }
+            }
+        }
+
+        // Item Classes
+        class Item {
+            constructor(name, description, type) {
+                this.name = name;
+                this.description = description;
+                this.type = type;
+            }
+        }
+
+        class Consumable extends Item {
+            constructor(name, description, healAmount) {
+                super(name, description, 'consumable');
+                this.healAmount = healAmount;
+            }
+        }
+
+        class Weapon extends Item {
+            constructor(name, description, damageBonus) {
+                super(name, description, 'weapon');
+                this.damageBonus = damageBonus;
+            }
+        }
+
+        class Armor extends Item {
+            constructor(name, description, defenseBonus) {
+                super(name, description, 'armor');
+                this.defenseBonus = defenseBonus;
+            }
+        }
+
+        // Enemy Class
+        class Enemy {
+            constructor(name, health, maxDamage, gold, type) {
+                this.name = name;
+                this.health = health;
+                this.maxHealth = health;
+                this.maxDamage = maxDamage;
+                this.gold = gold;
+                this.type = type;
+            }
+        }
+
+        // Room Class
+        class Room {
+            constructor(name, description) {
+                this.name = name;
+                this.description = description;
+                this.items = [];
+                this.enemies = [];
+                this.npcs = [];
+                this.exits = {};
+            }
+
+            addExit(direction, room) {
+                this.exits[direction] = room;
+            }
+
+            addItem(item) {
+                this.items.push(item);
+            }
+
+            addEnemy(enemy) {
+                this.enemies.push(enemy);
+            }
+        }
+
+        // Initialize the game
+        function initGame() {
+            createItems();
+            createEnemies();
+            createRooms();
+            setupEventListeners();
+            
+            showTitleScreen();
+        }
+
+        // Create game items
+        function createItems() {
+            gameState.items = {
+                healthPotion: new Consumable('Health Potion', 'Restores a small amount of health', 10),
+                megaHealthPotion: new Consumable('Mega Health Potion', 'Restores a large amount of health', 30),
+                sharpStick: new Weapon('Sharp Stick', 'A pointy stick', 1),
+                axe: new Weapon('Axe', 'A heavy axe', 2),
+                sword: new Weapon('Sword', 'A steel sword', 4),
+                pitchFork: new Weapon('Pitch Fork', 'A farming tool', 6),
+                guardSword: new Weapon('Guard Sword', 'A sturdy sword', 10),
+                lordsSword: new Weapon('Lords Sword', 'An ornate sword', 12),
+                goblinScimitar: new Weapon('Goblin Scimitar', 'A curved blade', 13),
+                travelerArmor: new Armor('Traveler Armor', 'Light protective gear', 2),
+                villageArmor: new Armor('Village Armor', 'Sturdy protection', 4),
+                trollArmor: new Armor('Troll Armor', 'Thick hide armor', 6),
+                key: new Item('Key', 'A mysterious key', 'key'),
+                locket: new Item('Locket', 'A locked locket', 'quest'),
+                crown: new Item('Old Crown', 'A royal crown', 'quest'),
+                seedling: new Item('Seedling', 'A magical plant', 'quest')
+            };
+        }
+
+        // Create enemies
+        function createEnemies() {
+            const diff = gameState.difficulty;
+            gameState.enemies = {
+                wolf: new Enemy('Wolf', 7 * diff, 5 * diff, 20, 'beast'),
+                goblinOutcast: new Enemy('Goblin Outcast', 7 * diff, 4 * diff, 20, 'humanoid'),
+                bear: new Enemy('Bear Cub', 9 * diff, 7 * diff, 30, 'beast'),
+                trapper: new Enemy('Trapper', 10 * diff, 7 * diff, 40, 'humanoid'),
+                spider: new Enemy('Giant Spider', 10 * diff, 7 * diff, 30, 'beast'),
+                goblinScout: new Enemy('Goblin Scout', 13 * diff, 5 * diff, 50, 'humanoid'),
+                bandit: new Enemy('Bandit', 4 * diff, 7 * diff, 100, 'humanoid'),
+                thug: new Enemy('Thug', 8 * diff, 7 * diff, 100, 'humanoid'),
+                goblin: new Enemy('Goblin', 15 * diff, 13 * diff, 50, 'humanoid'),
+                goblinScout2: new Enemy('Goblin Scout', 13 * diff, 5 * diff, 50, 'humanoid'),
+                goblinRunt: new Enemy('Goblin Runt', 7 * diff, 3 * diff, 30, 'humanoid'),
+                goblinBrute: new Enemy('Goblin Brute', 20 * diff, 9 * diff, 100, 'humanoid'),
+                troll: new Enemy('Troll', 20 * diff, 9 * diff, 100, 'humanoid'),
+                prisoner: new Enemy('Excaped Prisoner', 3 * diff, 2 * diff, 0, 'humanoid'),
+                dragon: new Enemy('Timόtheos', 45 * diff, 17 * diff, 400, 'dragon'),
+                goblinBrute2: new Enemy('Goblin Brute', 20 * diff, 9 * diff, 100, 'humanoid')
+            };
+        }
+
+        // Create game rooms
+        function createRooms() {
+            gameState.rooms = {
+                forestClearing: new Room('Forest Clearing', 'You are in a small clearing in the forest. Sunlight filters through the canopy above.'),
+                forest: new Room('Forest', 'A dense forest surrounds you. The sounds of wildlife fill the air.'),
+                pathInForest: new Room('Path in Forest', 'A narrow path winds through the trees. Footprints mark the dirt.'),
+                deeperInForest: new Room('Deeper in Forest', 'The forest grows thicker here. The light is dim and the air is still.'),
+                alongForest: new Room('Along Path', 'You follow a path that cuts through the wilderness.'),
+                deepForest: new Room('Deep Dark Forest', 'Ancient trees tower above you, blocking out most sunlight.'),
+                hutInForest: new Room('Hut in Forest', 'A small wooden hut stands in a clearing. Smoke rises from its chimney.'),
+                meadow: new Room('Meadow', 'A wide open meadow stretches before you, filled with wildflowers.'),
+                crossRoad: new Room('Cross Roads', 'Paths lead in multiple directions. A sign points west to "Village of Lord Joss".'),
+                village: new Room('The Village', 'You enter a small village. People move about their daily tasks.'),
+                alongRidge: new Room('Along the Ridge', 'A steep ridge overlooks the valley below.'),
+                tallRidge: new Room('Tall Ridge', 'You stand at the top of a tall ridge with a commanding view.'),
+                pathInMeadow: new Room('Path Along Meadow', 'A well-trodden path runs alongside a meadow.'),
+                keep: new Room('The Keep', 'A fortified keep stands before you, the seat of local power.'),
+                caveEntrance: new Room('Cave Entrance', 'A dark cave mouth opens in the hillside. Cool air flows from within.'),
+                caveEntrance2: new Room('Cave Entrance', 'Another cave entrance, this one looks recently used.'),
+                deepCave: new Room('Deep Cave', 'You are deep within the cave system. Torchlight flickers on the walls.'),
+                caveCavern: new Room('Cave Cavern', 'A massive cavern opens before you, filled with strange formations.'),
+                bossRoom: new Room('Open Cavern', 'An immense cavern with high ceilings. The air feels heavy and ominous.'),
+                forestGrove: new Room('Forest Grove', 'A tranquil grove filled with ancient trees and soft light.'),
+                dungeon: new Room('Dungeon', 'A dark, damp dungeon. The air smells of mold and despair.'),
+                oldVault: new Room('Old Vault', 'An ancient stone vault. Dust covers everything.')
+            };
+            
+            // Set up room connections
+            gameState.rooms.forestClearing.addExit('north', gameState.rooms.forest);
+            gameState.rooms.forest.addExit('north', gameState.rooms.deeperInForest);
+            gameState.rooms.forest.addExit('west', gameState.rooms.pathInForest);
+            gameState.rooms.forest.addExit('south', gameState.rooms.forestClearing);
+            gameState.rooms.deeperInForest.addExit('north', gameState.rooms.deepForest);
+            gameState.rooms.deeperInForest.addExit('west', gameState.rooms.alongForest);
+            gameState.rooms.deeperInForest.addExit('east', gameState.rooms.forestGrove);
+            gameState.rooms.pathInForest.addExit('north', gameState.rooms.alongForest);
+            gameState.rooms.pathInForest.addExit('east', gameState.rooms.forest);
+            gameState.rooms.alongForest.addExit('north', gameState.rooms.hutInForest);
+            gameState.rooms.alongForest.addExit('east', gameState.rooms.deeperInForest);
+            gameState.rooms.alongForest.addExit('south', gameState.rooms.pathInForest);
+            gameState.rooms.deepForest.addExit('north', gameState.rooms.meadow);
+            gameState.rooms.deepForest.addExit('south', gameState.rooms.deeperInForest);
+            gameState.rooms.hutInForest.addExit('north', gameState.rooms.crossRoad);
+            gameState.rooms.hutInForest.addExit('south', gameState.rooms.alongForest);
+            gameState.rooms.meadow.addExit('north', gameState.rooms.tallRidge);
+            gameState.rooms.meadow.addExit('south', gameState.rooms.deepForest);
+            gameState.rooms.crossRoad.addExit('north', gameState.rooms.pathInMeadow);
+            gameState.rooms.crossRoad.addExit('west', gameState.rooms.village);
+            gameState.rooms.crossRoad.addExit('south', gameState.rooms.hutInForest);
+            gameState.rooms.village.addExit('north', gameState.rooms.keep);
+            gameState.rooms.village.addExit('east', gameState.rooms.crossRoad);
+            gameState.rooms.alongRidge.addExit('north', gameState.rooms.caveEntrance2);
+            gameState.rooms.alongRidge.addExit('west', gameState.rooms.tallRidge);
+            gameState.rooms.alongRidge.addExit('south', gameState.rooms.oldVault);
+            gameState.rooms.tallRidge.addExit('north', gameState.rooms.caveEntrance);
+            gameState.rooms.tallRidge.addExit('east', gameState.rooms.alongRidge);
+            gameState.rooms.tallRidge.addExit('west', gameState.rooms.pathInMeadow);
+            gameState.rooms.tallRidge.addExit('south', gameState.rooms.meadow);
+            gameState.rooms.pathInMeadow.addExit('east', gameState.rooms.alongRidge);
+            gameState.rooms.pathInMeadow.addExit('west', gameState.rooms.keep);
+            gameState.rooms.pathInMeadow.addExit('south', gameState.rooms.crossRoad);
+            gameState.rooms.keep.addExit('east', gameState.rooms.pathInMeadow);
+            gameState.rooms.keep.addExit('south', gameState.rooms.village);
+            gameState.rooms.keep.addExit('north', gameState.rooms.dungeon);
+            gameState.rooms.caveEntrance2.addExit('north', gameState.rooms.deepCave);
+            gameState.rooms.caveEntrance2.addExit('south', gameState.rooms.alongRidge);
+            gameState.rooms.caveEntrance.addExit('north', gameState.rooms.caveCavern);
+            gameState.rooms.caveEntrance.addExit('south', gameState.rooms.tallRidge);
+            gameState.rooms.deepCave.addExit('west', gameState.rooms.caveCavern);
+            gameState.rooms.deepCave.addExit('south', gameState.rooms.caveEntrance2);
+            gameState.rooms.caveCavern.addExit('east', gameState.rooms.deepCave);
+            gameState.rooms.caveCavern.addExit('east', gameState.rooms.bossRoom);
+            gameState.rooms.caveCavern.addExit('south', gameState.rooms.caveEntrance);
+            gameState.rooms.bossRoom.addExit('east', gameState.rooms.caveCavern);
+            gameState.rooms.forestGrove.addExit('west', gameState.rooms.deeperInForest);
+            gameState.rooms.dungeon.addExit('south', gameState.rooms.keep);
+            gameState.rooms.oldVault.addExit('north', gameState.rooms.alongRidge);
+            
+            // Add items to rooms
+            gameState.rooms.forestClearing.addItem(gameState.items.sharpStick);
+            gameState.rooms.pathInForest.addItem(gameState.items.axe);
+            gameState.rooms.deeperInForest.addItem(gameState.items.sword);
+            gameState.rooms.alongForest.addItem(gameState.items.healthPotion);
+            gameState.rooms.deepForest.addItem(gameState.items.megaHealthPotion);
+            gameState.rooms.village.addItem(gameState.items.pitchFork);
+            gameState.rooms.keep.addItem(gameState.items.lordsSword);
+            gameState.rooms.caveCavern.addItem(gameState.items.megaHealthPotion);
+            gameState.rooms.forestGrove.addItem(gameState.items.seedling);
+            gameState.rooms.dungeon.addItem(gameState.items.key);
+            gameState.rooms.oldVault.addItem(gameState.items.crown);
+            
+            // Add enemies to rooms
+            gameState.rooms.forest.addEnemy(gameState.enemies.wolf);
+            gameState.rooms.pathInForest.addEnemy(gameState.enemies.goblinOutcast);
+            gameState.rooms.alongForest.addEnemy(gameState.enemies.bear);
+            gameState.rooms.hutInForest.addEnemy(gameState.enemies.trapper);
+            gameState.rooms.deepForest.addEnemy(gameState.enemies.spider);
+            gameState.rooms.meadow.addEnemy(gameState.enemies.goblinScout);
+            gameState.rooms.crossRoad.addEnemy(gameState.enemies.bandit);
+            gameState.rooms.village.addEnemy(gameState.enemies.thug);
+            gameState.rooms.alongRidge.addEnemy(gameState.enemies.goblin);
+            gameState.rooms.tallRidge.addEnemy(gameState.enemies.goblinScout2);
+            gameState.rooms.pathInMeadow.addEnemy(gameState.enemies.goblinScout);
+            gameState.rooms.caveEntrance.addEnemy(gameState.enemies.goblinBrute);
+            gameState.rooms.caveEntrance2.addEnemy(gameState.enemies.goblinRunt);
+            gameState.rooms.caveCavern.addEnemy(gameState.enemies.troll);
+            gameState.rooms.dungeon.addEnemy(gameState.enemies.prisoner);
+            gameState.rooms.bossRoom.addEnemy(gameState.enemies.dragon);
+            
+            // Set starting room
+            gameState.currentRoom = gameState.rooms.forestClearing;
+        }
+
+        // Show title screen
+        function showTitleScreen() {
+            const output = document.getElementById('game-output');
+            output.innerHTML = '';
+            
+            const titleScreen = document.createElement('div');
+            titleScreen.className = 'title-screen';
+            
+            const title = document.createElement('h1');
+            title.className = 'title';
+            title.textContent = 'TALES OF VALOUR WEBPORT';
+            
+            const subtitle = document.createElement('h2');
+            subtitle.className = 'subtitle';
+            subtitle.textContent = 'A Text Adventure Game';
+            
+            const startBtn = document.createElement('button');
+            startBtn.className = 'btn';
+            startBtn.textContent = 'START GAME';
+            startBtn.onclick = showCharacterSelect;
+            
+            titleScreen.appendChild(title);
+            titleScreen.appendChild(subtitle);
+            titleScreen.appendChild(startBtn);
+            
+            output.appendChild(titleScreen);
+        }
+
+        // Show character selection
+        function showCharacterSelect() {
+            const output = document.getElementById('game-output');
+            output.innerHTML = '';
+            
+            const title = document.createElement('h1');
+            title.textContent = 'Choose Your Class';
+            title.style.textAlign = 'center';
+            title.style.marginBottom = '20px';
+            title.style.color = 'var(--highlight)';
+            
+            const characterSelect = document.createElement('div');
+            characterSelect.className = 'character-select';
+            
+            const classes = [
+                { 
+                    name: 'Traveler', 
+                    desc: 'A versatile adventurer skilled with sword and shield',
+                    attacks: 'Slash, Stab',
+                    icon: '⚔️'
+                },
+                { 
+                    name: 'Wilder', 
+                    desc: 'A fierce warrior who relies on brute strength',
+                    health: 'Higher health',
+                    attacks: 'Smash, Strike',
+                    icon: '🪓'
+                },
+                { 
+                    name: 'Ranger', 
+                    desc: 'A skilled archer with excellent tracking abilities',
+                    attacks: 'Shoot, Strike',
+                    icon: '🏹'
+                },
+                { 
+                    name: 'Shaman', 
+                    desc: 'A mystical caster who wields elemental powers',
+                    attacks: 'Blast, Stab',
+                    icon: '🔮'
+                }
+            ];
+            
+            classes.forEach(cls => {
+                const card = document.createElement('div');
+                card.className = 'character-card';
+                card.onclick = () => {
+                    selectDifficulty(cls.name);
+                };
+                
+                const icon = document.createElement('div');
+                icon.className = 'character-icon';
+                icon.textContent = cls.icon;
+                
+                const name = document.createElement('h3');
+                name.textContent = cls.name;
+                
+                const desc = document.createElement('p');
+                desc.textContent = cls.desc;
+                
+                const attacks = document.createElement('p');
+                attacks.innerHTML = `<strong>Attacks:</strong> ${cls.attacks}`;
+                
+                if (cls.health) {
+                    const health = document.createElement('p');
+                    health.innerHTML = `<strong>Health:</strong> ${cls.health}`;
+                    card.appendChild(health);
+                }
+                
+                card.appendChild(icon);
+                card.appendChild(name);
+                card.appendChild(desc);
+                card.appendChild(attacks);
+                characterSelect.appendChild(card);
+            });
+            
+            output.appendChild(title);
+            output.appendChild(characterSelect);
+        }
+        
+        // Select difficulty
+        function selectDifficulty(className) {
+            const output = document.getElementById('game-output');
+            output.innerHTML = '';
+            
+            const title = document.createElement('h1');
+            title.textContent = 'Select Difficulty';
+            title.style.textAlign = 'center';
+            title.style.marginBottom = '20px';
+            
+            const difficulties = [
+                { name: 'Easy', level: 1, desc: 'For casual players' },
+                { name: 'Normal', level: 2, desc: 'Standard challenge' },
+                { name: 'Hard', level: 3, desc: 'For seasoned adventurers' }
+            ];
+            
+            const difficultySelect = document.createElement('div');
+            difficultySelect.className = 'character-select';
+            
+            difficulties.forEach(diff => {
+                const card = document.createElement('div');
+                card.className = 'character-card';
+                card.onclick = () => {
+                    gameState.difficulty = diff.level;
+                    document.getElementById('difficulty-display').textContent = diff.name;
+                    startGame(className);
+                };
+                
+                const name = document.createElement('h3');
+                name.textContent = diff.name;
+                name.style.color = diff.level === 3 ? 'var(--accent)' : 
+                                  diff.level === 2 ? 'var(--highlight)' : 'var(--xp)';
+                
+                const level = document.createElement('p');
+                level.innerHTML = `<strong>Challenge:</strong> ${diff.desc}`;
+                
+                card.appendChild(name);
+                card.appendChild(level);
+                difficultySelect.appendChild(card);
+            });
+            
+            output.appendChild(title);
+            output.appendChild(difficultySelect);
+        }
+
+        // Start the game
+        function startGame(className) {
+            gameState.gameActive = true;
+            
+            // Create player
+            const playerName = `The ${className}`;
+            gameState.player = new Player(playerName, className);
+            
+            // Initial output
+            gameState.player.addToOutput(`Welcome, ${playerName}!`);
+            gameState.player.addToOutput(`Difficulty: ${gameState.difficulty === 1 ? 'Easy' : gameState.difficulty === 2 ? 'Normal' : 'Hard'}`);
+            gameState.player.addToOutput(gameState.currentRoom.description);
+            gameState.player.addToOutput('Type "help" for a list of commands.');
+            
+            // Add starting item
+            gameState.player.addToInventory(gameState.items.healthPotion);
+            
+            // Update UI
+            gameState.updateUI();
+        }
+
+        // Process player commands
+        function processCommand(command) {
+            if (!gameState.gameActive) return;
+            
+            command = command.trim().toLowerCase();
+            if (!command) return;
+            
+            const player = gameState.player;
+            const room = gameState.currentRoom;
+            
+            // Add command to output
+            player.addToOutput(`> ${command}`);
+            
+            // Handle commands
+            if (gameState.inCombat) {
+                handleCombatCommand(command);
+            } else {
+                switch(command) {
+                    case 'help':
+                        showHelp();
+                        break;
+                    case 'stats':
+                        showStats();
+                        break;
+                    case 'explore':
+                        exploreRoom();
+                        break;
+                    case 'inventory':
+                    case 'inv':
+                        showInventory();
+                        break;
+                    case 'rest':
+                        player.rest();
+                        break;
+                    case 'quit':
+                        gameState.gameActive = false;
+                        player.addToOutput('Thanks for playing!');
+                        break;
+                    default:
+                        if (command.startsWith('use ')) {
+                            const item = command.substring(4);
+                            player.useItem(item);
+                        } else if (command.startsWith('equip ')) {
+                            const item = command.substring(6);
+                            player.equipItem(item);
+                        } else if (command.startsWith('go ')) {
+                            const direction = command.substring(3);
+                            moveToRoom(direction);
+                        } else {
+                            player.addToOutput(`Unknown command: "${command}". Type "help" for available commands.`);
+                        }
+                }
+            }
+            
+            // Clear input field
+            document.getElementById('command-input').value = '';
+        }
+
+        // Handle combat commands
+        function handleCombatCommand(command) {
+            const player = gameState.player;
+            const enemy = gameState.currentEnemy;
+            
+            switch(command) {
+                case 'attack':
+                    player.attack(enemy, player.unarmedAttack);
+                    break;
+                case player.firstAttack.toLowerCase():
+                    player.attack(enemy, player.firstAttack);
+                    break;
+                case player.secondAttack.toLowerCase():
+                    player.attack(enemy, player.secondAttack);
+                    break;
+                case 'use health potion':
+                    player.useItem('health potion');
+                    player.enemyAttack(enemy);
+                    break;
+                case 'use mega health potion':
+                    player.useItem('mega health potion');
+                    player.enemyAttack(enemy);
+                    break;
+                case 'flee':
+                    if (Math.random() > 0.3) {
+                        player.addToOutput('You successfully fled from combat!');
+                        gameState.inCombat = false;
+                        gameState.currentEnemy = null;
+                    } else {
+                        player.addToOutput('You failed to flee!');
+                        player.enemyAttack(enemy);
+                    }
+                    break;
+                default:
+                    player.addToOutput('Invalid combat command. Available: attack, ' + 
+                                      player.firstAttack.toLowerCase() + ', ' + 
+                                      player.secondAttack.toLowerCase() + ', use [item], flee');
+            }
+        }
+
+        // Show help information
+        function showHelp() {
+            const player = gameState.player;
+            player.addToOutput('Available Commands:');
+            player.addToOutput('-------------------');
+            
+            for (const [cmd, desc] of Object.entries(gameState.commands)) {
+                player.addToOutput(`${cmd}: ${desc}`);
+            }
+            
+            player.addToOutput('');
+            player.addToOutput('In combat, you can use:');
+            player.addToOutput(`attack: Basic ${player.unarmedAttack}`);
+            player.addToOutput(`${player.firstAttack.toLowerCase()}: ${player.firstAttack} attack`);
+            player.addToOutput(`${player.secondAttack.toLowerCase()}: ${player.secondAttack} attack`);
+            player.addToOutput('use [item]: Use an item from inventory');
+            player.addToOutput('flee: Attempt to escape combat');
+        }
+
+        // Show player stats
+        function showStats() {
+            const player = gameState.player;
+            player.addToOutput(`${player.name} the ${player.className}`);
+            player.addToOutput(`Level: ${player.level}`);
+            player.addToOutput(`Health: ${player.health}/${player.maxHealth}`);
+            player.addToOutput(`Gold: ${player.gold}`);
+            player.addToOutput(`Experience: ${player.exp}/${player.level * 100}`);
+            player.addToOutput(`Score: ${player.score}`);
+            
+            if (player.equippedWeapon) {
+                player.addToOutput(`Weapon: ${player.equippedWeapon.name} (+${player.equippedWeapon.damageBonus} damage)`);
+            } else {
+                player.addToOutput('Weapon: None');
+            }
+            
+            if (player.equippedArmor) {
+                player.addToOutput(`Armor: ${player.equippedArmor.name} (+${player.equippedArmor.defenseBonus} defense)`);
+            } else {
+                player.addToOutput('Armor: None');
+            }
+            
+            player.addToOutput(`Rest Cooldown: ${player.restCooldown} turns`);
+        }
+
+        // Show player inventory
+        function showInventory() {
+            const player = gameState.player;
+            if (player.inventory.length === 0) {
+                player.addToOutput('Your inventory is empty.');
+                return;
+            }
+            
+            player.addToOutput('Inventory:');
+            player.inventory.forEach(item => {
+                player.addToOutput(`- ${item.name}: ${item.description}`);
+            });
+        }
+
+        // Explore the current room
+        function exploreRoom() {
+            const player = gameState.player;
+            const room = gameState.currentRoom;
+            
+            player.addToOutput(`You explore the ${room.name}...`);
+            
+            // Find items
+            if (room.items.length > 0) {
+                const item = room.items.pop();
+                player.addToInventory(item);
+            } else {
+                player.addToOutput('You found nothing of value.');
+            }
+            
+            // Chance of encountering an enemy
+            if (room.enemies.length > 0 && Math.random() > 0.5) {
+                const enemy = room.enemies[0];
+                gameState.inCombat = true;
+                gameState.currentEnemy = enemy;
+                
+                player.addToOutput('');
+                player.addToOutput(`A ${enemy.name} appears!`, 'combat-alert');
+                player.addToOutput('Combat has started!', 'combat-alert');
+                player.addToOutput(`Health: ${enemy.health}/${enemy.maxHealth}`);
+                player.addToOutput('Type "attack" to fight or "flee" to try to escape.');
+            } else if (room.enemies.length > 0) {
+                player.addToOutput('You sense danger but encounter nothing.');
+            }
+            
+            // Tire effect
+            player.tire();
+            player.restCooldown = Math.max(0, player.restCooldown - 1);
+            
+            gameState.updateUI();
+        }
+
+        // Move to a different room
+        function moveToRoom(direction) {
+            const player = gameState.player;
+            const room = gameState.currentRoom;
+            
+            if (room.exits[direction]) {
+                gameState.currentRoom = room.exits[direction];
+                player.addToOutput(`You move ${direction}.`);
+                player.addToOutput(gameState.currentRoom.description);
+                
+                // Check for boss room
+                if (gameState.currentRoom.name === 'Open Cavern') {
+                    if (gameState.fightStage === 1) {
+                        player.addToOutput('You enter the room and see a towering figure...', 'combat-alert');
+                        player.addToOutput('BOSS: "Petty mortal! You are not worthy to challenge me!"', 'combat-alert');
+                        player.addToOutput('A Goblin Brute enters the room!', 'combat-alert');
+                        gameState.inCombat = true;
+                        gameState.currentEnemy = gameState.enemies.goblinBrute2;
+                    } else if (gameState.fightStage === 2) {
+                        player.addToOutput('BOSS: "Now you challenge me! You can\'t turn back now!"', 'combat-alert');
+                        gameState.inCombat = true;
+                        gameState.currentEnemy = gameState.enemies.dragon;
+                    }
+                }
+                
+                // Tire effect
+                player.tire();
+                player.restCooldown = Math.max(0, player.restCooldown - 1);
+                player.score += 25;
+                player.exp += 25;
+                
+                // Check for level up
+                if (player.exp >= player.level * 100) {
+                    player.levelUp();
+                }
+            } else {
+                player.addToOutput(`You can't go ${direction} from here.`);
+            }
+            
+            gameState.updateUI();
+        }
+
+        // Update UI elements
+        gameState.updateUI = function() {
+            if (!gameState.player) return;
+            
+            const player = gameState.player;
+            const room = gameState.currentRoom;
+            
+            // Update player stats
+            const statsGrid = document.getElementById('stats-grid');
+            statsGrid.innerHTML = `
+                <div class="stat-item">
+                    <div class="stat-label">Health</div>
+                    <div class="stat-value health-value">${player.health}/${player.maxHealth}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Level</div>
+                    <div class="stat-value">${player.level}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Gold</div>
+                    <div class="stat-value gold-value">${player.gold}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">XP</div>
+                    <div class="stat-value xp-value">${player.exp}/${player.level * 100}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Score</div>
+                    <div class="stat-value">${player.score}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Class</div>
+                    <div class="stat-value">${player.className} ${player.classIcon}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Weapon</div>
+                    <div class="stat-value">${player.equippedWeapon ? player.equippedWeapon.name : 'None'}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Armor</div>
+                    <div class="stat-value">${player.equippedArmor ? player.equippedArmor.name : 'None'}</div>
+                </div>
+            `;
+            
+            // Update inventory
+            const inventoryList = document.getElementById('inventory-list');
+            inventoryList.innerHTML = '';
+            
+            if (player.inventory.length === 0) {
+                inventoryList.innerHTML = '<div class="inventory-item">No items</div>';
+            } else {
+                player.inventory.forEach(item => {
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'inventory-item';
+                    itemEl.innerHTML = `
+                        <div>${item.name}</div>
+                        <div class="item-rarity">${item.type}</div>
+                    `;
+                    itemEl.onclick = () => {
+                        if (item.type === 'consumable') {
+                            player.useItem(item.name);
+                        } else if (item.type === 'weapon' || item.type === 'armor') {
+                            player.equipItem(item.name);
+                        }
+                    };
+                    inventoryList.appendChild(itemEl);
+                });
+            }
+            
+            // Update command list
+            const commandList = document.getElementById('command-list');
+            commandList.innerHTML = '';
+            
+            for (const cmd in gameState.commands) {
+                const cmdEl = document.createElement('div');
+                cmdEl.className = 'command-item';
+                cmdEl.textContent = cmd;
+                cmdEl.onclick = () => {
+                    document.getElementById('command-input').value = cmd;
+                    document.getElementById('submit-btn').click();
+                };
+                commandList.appendChild(cmdEl);
+            }
+            
+            // Highlight combat status
+            const output = document.getElementById('game-output');
+            if (gameState.inCombat) {
+                output.classList.add('combat-alert');
+            } else {
+                output.classList.remove('combat-alert');
+            }
+        };
+
+        // Set up event listeners
+        function setupEventListeners() {
+            const input = document.getElementById('command-input');
+            const submitBtn = document.getElementById('submit-btn');
+            
+            submitBtn.addEventListener('click', () => {
+                processCommand(input.value);
+            });
+            
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    processCommand(input.value);
+                }
+            });
+        }
+
+        // Initialize the game when the page loads
+        window.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>
